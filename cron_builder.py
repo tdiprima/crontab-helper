@@ -84,6 +84,11 @@ def build_cron_expression(schedule: dict) -> str:
         weekday = resolve_weekday(schedule.get("day_of_week", "1"))
         return f"{minute} {hour} * * {weekday}"
 
+    if frequency == "weekdays":
+        hour = schedule.get("hour", "0")
+        minute = schedule.get("minute", "0")
+        return f"{minute} {hour} * * 1-5"
+
     if frequency == "every_month":
         hour = schedule.get("hour", "0")
         minute = schedule.get("minute", "0")

@@ -10,9 +10,10 @@ How often should this run?
   2) Every hour
   3) Every day
   4) Every week
-  5) Every month
-  6) Every year
-  7) Custom cron expression
+  5) Weekdays (Mon-Fri)
+  6) Every month
+  7) Every year
+  8) Custom cron expression
 """
 
 FREQUENCY_MAP = {
@@ -20,9 +21,10 @@ FREQUENCY_MAP = {
     "2": "every_hour",
     "3": "every_day",
     "4": "every_week",
-    "5": "every_month",
-    "6": "every_year",
-    "7": "custom",
+    "5": "weekdays",
+    "6": "every_month",
+    "7": "every_year",
+    "8": "custom",
 }
 
 
@@ -46,10 +48,10 @@ def gather_frequency() -> str:
     """Ask the user to choose how often the job should run."""
     print(FREQUENCY_MENU)
     while True:
-        choice = ask("Enter choice (1-7)").strip()
+        choice = ask("Enter choice (1-8)").strip()
         if choice in FREQUENCY_MAP:
             return FREQUENCY_MAP[choice]
-        print("  Invalid choice. Enter a number from 1 to 7.")
+        print("  Invalid choice. Enter a number from 1 to 8.")
 
 
 def gather_command() -> str:
@@ -80,6 +82,10 @@ def gather_schedule(frequency: str) -> dict:
         schedule["day_of_week"] = ask(
             "Which day of the week? (e.g. monday, tuesday, 1-7)", "monday"
         )
+        schedule["hour"] = ask_int("At what hour (0-23)?", 0, 23, 0)
+        schedule["minute"] = ask_int("At what minute (0-59)?", 0, 59, 0)
+
+    elif frequency == "weekdays":
         schedule["hour"] = ask_int("At what hour (0-23)?", 0, 23, 0)
         schedule["minute"] = ask_int("At what minute (0-59)?", 0, 59, 0)
 

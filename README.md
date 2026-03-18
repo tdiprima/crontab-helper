@@ -12,7 +12,7 @@ Cron syntax is simple once you know it. But every time you sit down to schedule 
 
 `crontab-helper` walks you through scheduling a job interactively. Pick a frequency, answer a few questions about timing, provide your command, and it writes the entry directly to your crontab — no editor, no syntax lookup, no manual copy-paste.
 
-Supports: every N minutes · hourly · daily · weekly · monthly · yearly · raw custom expression
+Supports: every N minutes · hourly · daily · weekly · weekdays (Mon–Fri) · monthly · yearly · raw custom expression
 
 Previews the full updated crontab before writing anything.
 
@@ -29,11 +29,12 @@ How often should this run?
   2) Every hour
   3) Every day
   4) Every week
-  5) Every month
-  6) Every year
-  7) Custom cron expression
+  5) Weekdays (Mon-Fri)
+  6) Every month
+  7) Every year
+  8) Custom cron expression
 
-Enter choice (1-7): 3
+Enter choice (1-8): 3
 At what hour (0-23)? [0]: 6
 At what minute (0-59)? [0]: 30
 
@@ -79,9 +80,10 @@ python3 main.py --log-level DEBUG   # verbose output for troubleshooting
 | Every hour    | `30 * * * *`             | At 30 minutes past every hour  |
 | Every day     | `30 6 * * *`             | Daily at 6:30 AM               |
 | Every week    | `0 9 * * 1`              | Mondays at 9:00 AM             |
+| Weekdays      | `30 8 * * 1-5`           | Mon–Fri at 8:30 AM             |
 | Every month   | `0 0 1 * *`              | 1st of the month at midnight   |
 | Every year    | `0 0 1 1 *`              | January 1st at midnight        |
-| Custom        | `30 6 * * 1-5`           | Whatever you enter directly    |
+| Custom        | `0 7 * * *`              | Whatever you enter directly    |
 
 **Files:**
 
