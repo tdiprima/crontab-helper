@@ -2,8 +2,6 @@
 
 Python CLI that turns plain scheduling questions into crontab entries and installs them for you.
 
----
-
 ## The Lookup You're Tired of Doing
 
 Cron syntax is simple once you know it. But every time you sit down to schedule something new, you end up Googling "cron every 15 minutes" or "cron first day of month" just to get the field order right.
@@ -17,8 +15,6 @@ Cron syntax is simple once you know it. But every time you sit down to schedule 
 Supports: every N minutes · hourly · daily · weekly · monthly · yearly · raw custom expression
 
 Previews the full updated crontab before writing anything.
-
----
 
 ## Example Output
 
@@ -57,14 +53,12 @@ Add this entry to your crontab? [y/n]: y
 Done. Entry added to your crontab.
 ```
 
----
-
 ## Usage
 
-**Requirements:** Python 3.7+, Unix-like OS (Linux, macOS)
+**Requirements:** Python 3.10+, Unix-like OS (Linux, macOS)
 
 ```bash
-git clone https://github.com/you/crontab-helper.git
+git clone https://github.com/tdiprima/crontab-helper.git
 cd crontab-helper
 python3 main.py
 ```
@@ -97,3 +91,5 @@ python3 main.py --log-level DEBUG   # verbose output for troubleshooting
 | `prompter.py`     | Interactive prompts                     |
 | `cron_builder.py` | Converts schedule data to cron syntax   |
 | `cron_writer.py`  | Reads and writes crontab via subprocess |
+
+<br>
