@@ -1,4 +1,4 @@
-# crontab-helper
+![](./banner.png)
 
 Python CLI that turns plain scheduling questions into crontab entries and installs them for you.
 
