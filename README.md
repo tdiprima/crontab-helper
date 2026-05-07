@@ -94,4 +94,14 @@ python3 main.py --log-level DEBUG   # verbose output for troubleshooting
 | `cron_builder.py` | Converts schedule data to cron syntax   |
 | `cron_writer.py`  | Reads and writes crontab via subprocess |
 
+## Bonus script!
+
+Firewall helper
+
+```sh
+./fw_rule_gen.sh
+```
+
+Prompts you for what you want and then gives you the rule.
+
 <br>
