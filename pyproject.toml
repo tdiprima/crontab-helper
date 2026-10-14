@@ -1,7 +1,7 @@
 [project]
 name = "crontab-helper"
 version = "0.1.0"
-description = "Add your description here"
+description = "Interactive Python CLI that builds validated crontab entries from simple prompts and installs them — no cron syntax lookup needed."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []
