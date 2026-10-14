@@ -2,6 +2,8 @@
 
 import logging
 
+from cron_builder import DAYS_IN_MONTH, VALID_MINUTE_INTERVALS, resolve_month
+
 logger = logging.getLogger(__name__)
 
 FREQUENCY_MENU = """
@@ -44,6 +46,27 @@ def ask_int(prompt: str, min_val: int, max_val: int, default: int) -> int:
         print(f"  Please enter a number between {min_val} and {max_val}.")
 
 
+def ask_interval() -> int:
+    """Prompt for a minute interval that divides 60 evenly."""
+    allowed = ", ".join(str(i) for i in VALID_MINUTE_INTERVALS)
+    while True:
+        raw = ask("Run every how many minutes?", "5")
+        if raw.isdigit() and int(raw) in VALID_MINUTE_INTERVALS:
+            return int(raw)
+        print(f"  Interval must divide 60 evenly so gaps are uniform. Choose one of: {allowed}.")
+
+
+def ask_month() -> str:
+    """Prompt for a month name or number until it resolves."""
+    while True:
+        raw = ask("Which month? (e.g. january, jan, or 1-12)", "january")
+        try:
+            resolve_month(raw)
+            return raw
+        except ValueError as exc:
+            print(f"  {exc}")
+
+
 def gather_frequency() -> str:
     """Ask the user to choose how often the job should run."""
     print(FREQUENCY_MENU)
@@ -57,6 +80,7 @@ def gather_frequency() -> str:
 def gather_command() -> str:
     """Ask the user for the command to run."""
     print("\nTip: Use full paths for reliability, e.g. /usr/bin/python3 /home/user/script.py")
+    print("Tip: Enter the command as you would in a shell; literal % signs are escaped for cron automatically.")
     while True:
         command = ask("Command to run")
         if command:
@@ -69,7 +93,7 @@ def gather_schedule(frequency: str) -> dict:
     schedule: dict = {"frequency": frequency}
 
     if frequency == "every_n_minutes":
-        schedule["interval"] = ask_int("Run every how many minutes?", 1, 59, 5)
+        schedule["interval"] = ask_interval()
 
     elif frequency == "every_hour":
         schedule["minute"] = ask_int("At which minute past the hour?", 0, 59, 0)
@@ -95,8 +119,14 @@ def gather_schedule(frequency: str) -> dict:
         schedule["minute"] = ask_int("At what minute (0-59)?", 0, 59, 0)
 
     elif frequency == "every_year":
-        schedule["month"] = ask("Which month? (e.g. january, jan, or 1-12)", "january")
-        schedule["day_of_month"] = ask_int("On which day of the month (1-31)?", 1, 31, 1)
+        schedule["month"] = ask_month()
+        month_num = resolve_month(schedule["month"])
+        max_day = DAYS_IN_MONTH[month_num]
+        schedule["day_of_month"] = ask_int(
+            f"On which day of the month (1-{max_day})?", 1, max_day, 1
+        )
+        if month_num == "2" and schedule["day_of_month"] == 29:
+            print("  Note: Feb 29 only runs in leap years.")
         schedule["hour"] = ask_int("At what hour (0-23)?", 0, 23, 0)
         schedule["minute"] = ask_int("At what minute (0-59)?", 0, 59, 0)
 
