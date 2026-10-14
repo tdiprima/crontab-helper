@@ -46,12 +46,15 @@ print_error() {
 
 # ─── Validate IP ──────────────────────────────
 
+# Decimal only: no leading zeros (Bash would parse 099 as octal, and
+# firewalls disagree on how to read them).
 validate_ip() {
     local ip=$1
     if [[ $ip =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
         IFS='.' read -r -a octets <<< "$ip"
         for octet in "${octets[@]}"; do
-            if (( octet > 255 )); then return 1; fi
+            if [[ $octet =~ ^0[0-9] ]]; then return 1; fi
+            if (( 10#$octet > 255 )); then return 1; fi
         done
         return 0
     fi
@@ -62,10 +65,21 @@ validate_ip() {
 
 validate_port() {
     local port=$1
-    if [[ $port =~ ^[0-9]+$ ]] && (( port >= 1 && port <= 65535 )); then
+    if [[ $port =~ ^[1-9][0-9]{0,4}$ ]] && (( 10#$port <= 65535 )); then
         return 0
     fi
     return 1
+}
+
+# Prompt wrapper: exit cleanly on EOF (Ctrl-D / closed stdin) instead of
+# looping forever on a failed read.
+prompt() {
+    local __var=$2
+    if ! read -rp "$1" "$__var"; then
+        echo ""
+        print_error "Input closed. Exiting."
+        exit 1
+    fi
 }
 
 # ─── Main ─────────────────────────────────────
@@ -75,11 +89,11 @@ print_header
 # Get IP
 while true; do
     echo -e "${BOLD}Enter the source IP address to allow:${RESET}"
-    read -rp "  IP: " IP
+    prompt "  IP: " IP
     if validate_ip "$IP"; then
         break
     else
-        print_error "Invalid IP address. Please try again."
+        print_error "Invalid IP address (decimal octets 0-255, no leading zeros). Please try again."
     fi
 done
 
@@ -89,7 +103,7 @@ echo ""
 while true; do
     echo -e "${BOLD}Enter the destination port number:${RESET}"
     echo -e "  ${DIM}(e.g. 22 for SSH, 80 for HTTP, 443 for HTTPS)${RESET}"
-    read -rp "  Port: " PORT
+    prompt "  Port: " PORT
     if validate_port "$PORT"; then
         break
     else
@@ -105,7 +119,7 @@ echo -e "  ${MAGENTA}1)${RESET} Add rule"
 echo -e "  ${MAGENTA}2)${RESET} Remove rule"
 echo ""
 while true; do
-    read -rp "  Choice [1-2]: " ACTION_CHOICE
+    prompt "  Choice [1-2]: " ACTION_CHOICE
     case $ACTION_CHOICE in
         1) ACTION="add"; break ;;
         2) ACTION="remove"; break ;;
@@ -125,7 +139,7 @@ echo -e "  ${MAGENTA}1)${RESET} Allow / Accept"
 echo -e "  ${MAGENTA}2)${RESET} Deny / Reject"
 echo ""
 while true; do
-    read -rp "  Choice [1-2]: " POLICY_CHOICE
+    prompt "  Choice [1-2]: " POLICY_CHOICE
     case $POLICY_CHOICE in
         1) POLICY="allow"; break ;;
         2) POLICY="deny";  break ;;
@@ -143,7 +157,7 @@ echo -e "  ${MAGENTA}3)${RESET} firewall-cmd (firewalld)"
 echo -e "  ${MAGENTA}4)${RESET} All three"
 echo ""
 while true; do
-    read -rp "  Choice [1-4]: " CHOICE
+    prompt "  Choice [1-4]: " CHOICE
     case $CHOICE in
         1|2|3|4) break ;;
         *) print_error "Please enter 1, 2, 3, or 4." ;;
