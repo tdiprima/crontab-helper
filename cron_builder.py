@@ -37,6 +37,46 @@ MONTH_NAMES = {
 }
 
 
+VALID_MINUTE_INTERVALS = (1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30)
+
+DAYS_IN_MONTH = {
+    "1": 31, "2": 29, "3": 31, "4": 30, "5": 31, "6": 30,
+    "7": 31, "8": 31, "9": 30, "10": 31, "11": 30, "12": 31,
+}
+
+
+def validate_interval(interval) -> int:
+    """Ensure a minute interval divides 60 evenly so the gaps are uniform."""
+    try:
+        value = int(interval)
+    except (TypeError, ValueError):
+        raise ValueError(f"Interval must be a number, got '{interval}'") from None
+    if value not in VALID_MINUTE_INTERVALS:
+        allowed = ", ".join(str(i) for i in VALID_MINUTE_INTERVALS)
+        raise ValueError(
+            f"Interval {value} does not divide 60 evenly; cron's */{value} would "
+            f"run at uneven gaps. Choose one of: {allowed}"
+        )
+    return value
+
+
+def validate_day_of_month(day, month: str) -> int:
+    """Ensure a day exists in the given (already resolved) month."""
+    try:
+        value = int(day)
+    except (TypeError, ValueError):
+        raise ValueError(f"Day must be a number, got '{day}'") from None
+    max_day = DAYS_IN_MONTH[month]
+    if not 1 <= value <= max_day:
+        raise ValueError(f"Day {value} is not valid for month {month} (1-{max_day})")
+    return value
+
+
+def escape_command(command: str) -> str:
+    """Escape literal percent signs; cron treats a bare % as a newline/stdin separator."""
+    return command.replace("%", "\\%")
+
+
 def resolve_weekday(value: str) -> str:
     """Resolve a weekday name or number to a cron-compatible value."""
     lower = value.strip().lower()
@@ -66,7 +106,7 @@ def build_cron_expression(schedule: dict) -> str:
     frequency = schedule.get("frequency")
 
     if frequency == "every_n_minutes":
-        interval = schedule["interval"]
+        interval = validate_interval(schedule["interval"])
         return f"*/{interval} * * * *"
 
     if frequency == "every_hour":
@@ -98,8 +138,8 @@ def build_cron_expression(schedule: dict) -> str:
     if frequency == "every_year":
         hour = schedule.get("hour", "0")
         minute = schedule.get("minute", "0")
-        day = schedule.get("day_of_month", "1")
         month = resolve_month(schedule.get("month", "1"))
+        day = validate_day_of_month(schedule.get("day_of_month", "1"), month)
         return f"{minute} {hour} {day} {month} *"
 
     if frequency == "custom":
@@ -112,7 +152,7 @@ def build_cron_line(schedule: dict, command: str) -> str:
     """Combine a cron expression with a command into a full crontab line."""
     expression = build_cron_expression(schedule)
     comment = schedule.get("comment", "").strip()
-    line = f"{expression} {command}"
+    line = f"{expression} {escape_command(command)}"
     if comment:
         line = f"# {comment}\n{line}"
     logger.debug("Built cron line: %s", line)
